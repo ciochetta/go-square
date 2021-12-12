@@ -1,0 +1,20 @@
+
+syntax = "proto3";
+
+package square;
+
+option go_package = "/grpc";
+
+service Square{
+
+    rpc GetSquare(GetSquareRequest) returns (GetSquareResponse) {}
+
+}
+
+message GetSquareRequest{
+    int32 number = 1;
+}
+
+message GetSquareResponse{
+    int32 number = 1;
+}
