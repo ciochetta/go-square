@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 
 	sq "github.com/ciochetta/go-square/grpc"
@@ -18,28 +19,34 @@ type server struct {
 // Our exposed method
 func (s server) GetSquare(ctx context.Context, in *sq.GetSquareRequest) (*sq.GetSquareResponse, error) {
 
+	log.Println("Received request: ", in.GetNumber())
+
 	return &sq.GetSquareResponse{
 		Number: in.Number * in.Number,
 	}, nil
 
 }
 
-func run() {
+func run() error {
 
 	lis, err := net.Listen("tcp", ":1234")
 
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		return err
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()),
+	)
 
 	sq.RegisterSquareServer(s, &server{})
 
 	log.Println("Listening on port 1234")
 
 	if err := s.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+		return err
 	}
+
+	return nil
 
 }
